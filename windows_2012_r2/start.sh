@@ -112,7 +112,7 @@ install_vm() {
     qemu-system-x86_64 \
         -accel $ACCEL \
         -name $VM_NAME \
-        -machine type=q35,accel=$ACCEL \
+        -machine type=q35 \
         -cpu host \
         -smp $CPU \
         -m $RAM \
