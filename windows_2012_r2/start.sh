@@ -10,7 +10,6 @@ echo
 echo -e "                 by jennienguyn"
 echo -e "\e[0m"
 
-
 if [[ "$PREFIX" == *"/data/data/com.termux"* ]]; then
     echo "[*] Dang cai dat PulseAudio cho Termux..."
     pkg install pulseaudio -y
@@ -57,6 +56,7 @@ save_config() {
 RAM=$RAM
 CPU=$CPU
 DISK_SIZE=$DISK_SIZE
+ACCEL=$ACCEL
 EOF
 }
 
@@ -86,9 +86,19 @@ install_vm() {
     read -p "Nhap dung luong o dia (VD: 40G, mac dinh 40G): " inp_disk
     if [ ! -z "$inp_disk" ]; then DISK_SIZE="$inp_disk"; fi
 
+    echo "Chon bo ao hoa:"
+    echo "1) KVM (neu ho tro)"
+    echo "2) TCG (software emulation)"
+    read -p "Lua chon (1/2, mac dinh 1): " accel_choice
+    case "$accel_choice" in
+        2) ACCEL="tcg" ;;
+        *) ACCEL="kvm" ;;
+    esac
+
     echo "==> RAM: $RAM MB"
     echo "==> CPU: $CPU"
     echo "==> DISK: $DISK_SIZE"
+    echo "==> Acceleration: $ACCEL"
     echo
 
     save_config
@@ -100,31 +110,26 @@ install_vm() {
     echo "[*] Khoi chay VM (che do CAI DAT)..."
 
     qemu-system-x86_64 \
-        -enable-kvm \
+        -accel $ACCEL \
         -name $VM_NAME \
-        -machine type=q35,accel=kvm \
+        -machine type=q35,accel=$ACCEL \
         -cpu host \
         -smp $CPU \
         -m $RAM \
         -rtc clock=host,base=localtime \
         -boot order=d \
-        \
         -device virtio-scsi-pci,id=scsi0 \
         -drive file="$DISK_IMG",if=none,id=drive0,format=qcow2 \
         -device scsi-hd,drive=drive0 \
-        \
         -drive file="$WIN_ISO",media=cdrom \
         -drive file="$VIRTIO_ISO",media=cdrom \
-        \
         -device virtio-net-pci,netdev=net0 \
         -netdev user,id=net0 \
-        \
         -vga qxl \
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
         -chardev spicevmc,id=spicechannel0,name=vdagent \
-        \
         -monitor stdio
 }
 
@@ -141,31 +146,28 @@ start_vm() {
     echo "    RAM  = $RAM"
     echo "    CPU  = $CPU"
     echo "    DISK = $DISK_IMG"
+    echo "    Accel = $ACCEL"
     echo
 
     qemu-system-x86_64 \
-        -enable-kvm \
+        -accel $ACCEL \
         -name $VM_NAME \
-        -machine type=q35,accel=kvm \
+        -machine type=q35,accel=$ACCEL \
         -cpu host \
         -smp $CPU \
         -m $RAM \
         -rtc clock=host,base=localtime \
         -boot order=c \
-        \
         -device virtio-scsi-pci,id=scsi0 \
         -drive file="$DISK_IMG",if=none,id=drive0,format=qcow2 \
         -device scsi-hd,drive=drive0 \
-        \
         -device virtio-net-pci,netdev=net0 \
         -netdev user,id=net0 \
-        \
         -vga qxl \
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
         -chardev spicevmc,id=spicechannel0,name=vdagent \
-        \
         -monitor stdio
 }
 
