@@ -24,6 +24,7 @@ DISK_IMG="$VM_NAME.qcow2"
 RAM="4096"
 CPU="2"
 DISK_SIZE="40G"
+CPU_TYPE="host"  # default CPU
 
 WIN_ISO="./iso/win2012r2.iso"
 VIRTIO_ISO="./iso/virtio-win.iso"
@@ -56,7 +57,9 @@ save_config() {
 RAM=$RAM
 CPU=$CPU
 DISK_SIZE=$DISK_SIZE
+CPU_TYPE=$CPU_TYPE
 ACCEL=$ACCEL
+VNC_PORT=$VNC_PORT
 EOF
 }
 
@@ -82,12 +85,14 @@ install_vm() {
     read -p "Nhap so luong CPU (mac dinh 2): " inp_cpu
     if [ ! -z "$inp_cpu" ]; then CPU="$inp_cpu"; fi
 
-    # Nếu muốn người dùng nhập loại CPU cụ thể
     read -p "Nhap CPU type (mac dinh 'host'): " inp_cputype
-    if [ ! -z "$inp_cputype" ]; then CPU_TYPE="$inp_cputype"; else CPU_TYPE="host"; fi
+    if [ ! -z "$inp_cputype" ]; then CPU_TYPE="$inp_cputype"; fi
 
     read -p "Nhap dung luong o dia (VD: 40G, mac dinh 40G): " inp_disk
     if [ ! -z "$inp_disk" ]; then DISK_SIZE="$inp_disk"; fi
+
+    read -p "Nhap port VNC (mac dinh 5901): " inp_vnc
+    if [ ! -z "$inp_vnc" ]; then VNC_PORT="$inp_vnc"; else VNC_PORT=5901; fi
 
     echo "Chon bo ao hoa:"
     echo "1) KVM (neu ho tro)"
@@ -103,6 +108,7 @@ install_vm() {
     echo "==> CPU type: $CPU_TYPE"
     echo "==> DISK: $DISK_SIZE"
     echo "==> Acceleration: $ACCEL"
+    echo "==> VNC port: $VNC_PORT"
     echo
 
     save_config
@@ -132,11 +138,12 @@ install_vm() {
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
-        -chardev spicevmc,id=spicechannel0,name=vdagent
+        -chardev spicevmc,id=spicechannel0,name=vdagent \
+        -vnc :$(($VNC_PORT-5900)) \
+        -monitor stdio
 }
 
 start_vm() {
-
     if [ ! -f "$DISK_IMG" ]; then
         echo "[!] Khong tim thay o dia VM. Hay cai dat truoc."
         exit 1
@@ -147,15 +154,16 @@ start_vm() {
     echo "[*] Khoi dong VM voi cau hinh:"
     echo "    RAM  = $RAM"
     echo "    CPU  = $CPU"
+    echo "    CPU type = $CPU_TYPE"
     echo "    DISK = $DISK_IMG"
     echo "    Accel = $ACCEL"
+    echo "    VNC port = $VNC_PORT"
     echo
 
     qemu-system-x86_64 \
-        -accel $ACCEL \
+        -machine type=q35,accel=$ACCEL \
         -name $VM_NAME \
-        -machine type=q35 \
-        -cpu host \
+        -cpu $CPU_TYPE \
         -smp $CPU \
         -m $RAM \
         -rtc clock=host,base=localtime \
@@ -169,7 +177,9 @@ start_vm() {
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
-        -chardev spicevmc,id=spicechannel0,name=vdagent
+        -chardev spicevmc,id=spicechannel0,name=vdagent \
+        -vnc :$(($VNC_PORT-5900)) \
+        -monitor stdio
 }
 
 reset_vm() {
