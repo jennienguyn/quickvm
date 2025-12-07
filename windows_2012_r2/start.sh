@@ -72,7 +72,6 @@ create_disk() {
 }
 
 install_vm() {
-
     download_iso
 
     echo "=== CAU HINH VM KHI CAI DAT ==="
@@ -82,6 +81,10 @@ install_vm() {
 
     read -p "Nhap so luong CPU (mac dinh 2): " inp_cpu
     if [ ! -z "$inp_cpu" ]; then CPU="$inp_cpu"; fi
+
+    # Nếu muốn người dùng nhập loại CPU cụ thể
+    read -p "Nhap CPU type (mac dinh 'host'): " inp_cputype
+    if [ ! -z "$inp_cputype" ]; then CPU_TYPE="$inp_cputype"; else CPU_TYPE="host"; fi
 
     read -p "Nhap dung luong o dia (VD: 40G, mac dinh 40G): " inp_disk
     if [ ! -z "$inp_disk" ]; then DISK_SIZE="$inp_disk"; fi
@@ -97,6 +100,7 @@ install_vm() {
 
     echo "==> RAM: $RAM MB"
     echo "==> CPU: $CPU"
+    echo "==> CPU type: $CPU_TYPE"
     echo "==> DISK: $DISK_SIZE"
     echo "==> Acceleration: $ACCEL"
     echo
@@ -110,10 +114,9 @@ install_vm() {
     echo "[*] Khoi chay VM (che do CAI DAT)..."
 
     qemu-system-x86_64 \
-        -accel $ACCEL \
+        -machine type=q35,accel=$ACCEL \
         -name $VM_NAME \
-        -machine type=q35 \
-        -cpu host \
+        -cpu $CPU_TYPE \
         -smp $CPU \
         -m $RAM \
         -rtc clock=host,base=localtime \
