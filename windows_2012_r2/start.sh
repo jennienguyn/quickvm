@@ -138,7 +138,7 @@ install_vm() {
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
-        -chardev spicevmc,id=spicechannel0,name=vdagent \
+        -display sdl
         -vnc :$(($VNC_PORT-5900)) \
         -monitor stdio
 }
@@ -177,7 +177,7 @@ start_vm() {
         -spice port=5930,disable-ticketing=on \
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
-        -chardev spicevmc,id=spicechannel0,name=vdagent \
+        -display sdl
         -vnc :$(($VNC_PORT-5900)) \
         -monitor stdio
 }
