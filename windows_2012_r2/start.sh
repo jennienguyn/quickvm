@@ -133,7 +133,6 @@ install_vm() {
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
         -chardev spicevmc,id=spicechannel0,name=vdagent \
-        -monitor stdio
 }
 
 start_vm() {
@@ -155,7 +154,7 @@ start_vm() {
     qemu-system-x86_64 \
         -accel $ACCEL \
         -name $VM_NAME \
-        -machine type=q35,accel=$ACCEL \
+        -machine type=q35 \
         -cpu host \
         -smp $CPU \
         -m $RAM \
@@ -171,7 +170,6 @@ start_vm() {
         -device virtio-serial \
         -device virtserialport,chardev=spicechannel0,name=com.redhat.spice.0 \
         -chardev spicevmc,id=spicechannel0,name=vdagent \
-        -monitor stdio
 }
 
 reset_vm() {
